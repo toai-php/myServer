@@ -1,6 +1,6 @@
 const Sequelize = require('sequelize');
 const sequelize = require('../database/database').sequelize;
-const Op = require('../database/database').Op;
+const Post = require('./Post');
 
 const User = sequelize.define(
     'users',
@@ -26,5 +26,7 @@ const User = sequelize.define(
         timestamps: false,
     }
 );
+
+User.hasMany(Post, {foreignKey: 'owner_id', sourceKey: 'id'});
 
 module.exports = User;

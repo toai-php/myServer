@@ -21,11 +21,43 @@ app.set('port', port);
 
 var server = http.createServer(app);
 
+
+var io = require('socket.io')(server);
+var client = [];
+const sendFunc = require('../socket/send');
+
+io.on('connection', (socket) => {
+  socket.on('joinchat', (id) => {
+    client[id] =socket;
+  });
+
+  socket.on('send', async (data) => {
+    var partner = (client[data.receiver.id]!= null);
+    const res = await sendFunc(data, partner);
+
+    if(res.code == '1000'){
+    if(client[data.sender.id]) {
+      client[data.sender.id].emit('onmessage', res);
+    }
+    if(partner) {
+      client[data.receiver.id].emit('onmessage', res);
+    }
+  }
+  });
+
+  socket.on('disconnect', () => {
+    
+    var i = client.indexOf(socket);
+    console.log('Got disconnect! ' + i);
+      client.splice(i, 1);
+  })
+});
 /**
  * Listen on provided port, on all network interfaces.
  */
 
-server.listen(port);
+server.listen(port , "0.0.0.0", () => {
+});
 server.on('error', onError);
 server.on('listening', onListening);
 

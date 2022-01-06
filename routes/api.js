@@ -1,155 +1,52 @@
-var express = require('express');
-var router = express.Router();
+const express = require('express');
+const router = express.Router();
 
-const User = require('../model/User');
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
-const verify = require('../module/verify_token');
+const addPostApi = require('./api_list/add_post_api');
+const getUserApi = require('./api_list/get_user_api');
+const logoutApi = require('./api_list/logout_api');
+const loginApi = require('./api_list/login_api');
+const signupApi = require('./api_list/signup_api');
+const getpostApi = require('./api_list/get_post');
+const getListPost = require('./api_list/get_list_post');
+const editPostApi = require('./api_list/edit_post');
+const deletePostApi = require('./api_list/delete_post');
+const reportPostApi = require('./api_list/report_post');
+const setCommentApi = require('./api_list/set_comment');
+const getCommentApi = require('./api_list/get_comment');
+const editCommentApi = require('./api_list/edit_comment')
+const likeApi = require('./api_list/like');
+const deleteCommentApi = require('./api_list/delete_comment')
+const getListChatApi = require('./api_list/get_list_chat')
+const getConversationApi = require('./api_list/get_conversation')
+const getListFriendsApi = require('./api_list/get_list_friend')
+const getRequestFriendsApi = require('./api_list/get_request_friend')
+const setRequestFriendApi = require('./api_list/set_request_friend')
+const setAcceptFriendApi = require('./api_list/set_accept_friend')
+const sendApi = require('./api_list/send_chat')
+const getProfile = require('./api_list/get_profile')
 
-require('dotenv').config();
-
-router.post('/signup', async (req, res) => {
-  
-  const userExist = await User.findOne({
-    attributes: ['phone'],
-    where: {
-      phone: req.body.phone
-    }
-  });
-  if(userExist){
-    return res.json({
-      code: '9996',
-      message: 'user existed',
-      data: userExist
-    });
-  }
-
-  try {
-    const salt = await bcrypt.genSalt(10);
-    const hashPassword = await bcrypt.hash(req.body.passwd, salt);
-
-    let newUser = await User.create({
-      phone: req.body.phone,
-      passwd: hashPassword,
-      }, {
-      fields: ['phone', 'passwd']
-      }
-    ); 
-
-    if(newUser){
-      res.json({
-        code: '1000',
-        message: 'OK',
-        data: 'data'
-      });
-    }
-  } catch (error) {
-    res.json({
-      code: '9999',
-      message: 'sign up failed: ' + error
-    });
-  }
-});
-
-router.post('/login', async (req, res) => {
-  const userExist = await User.findOne({
-    attributes: ['phone', 'passwd', 'name', 'avtlink', 'id'],
-    where: {
-      phone: req.body.phone
-    }
-  });
-  if(!userExist){
-    return res.json({
-      code: '9995',
-      message: 'user is not validated',
-      data: req.body.phone
-    });
-  }
-
-  try {
-    const validPass = await bcrypt.compare(req.body.passwd, userExist.passwd);
-    if(!validPass){
-      return res.json({
-        code: '9993',
-        message: 'invalid password',
-        data: {}
-      });
-    }
-    const token = jwt.sign({id: userExist.id}, process.env.TOKEN_SECRET);
-    res.json({
-        code: '1000',
-        message: 'OK',
-        data: {
-          id: userExist.id,
-          username: userExist.name,
-          token: token,
-          avatar: userExist.avtlink,
-          active: (userExist.name) ? 1 : -1
-        }
-    });
-
-    
-  } catch (error) {
-    res.json({
-      code: '9999',
-      message: 'sign up failed: ' + error
-    });
-  }
-
-});
-
-router.post('/logout', async (req, res) => {
-  const token = req.body.token;
-  try {
-    const verified = jwt.verify(token, process.env.TOKEN_SECRET);
-    if(verified){
-      res.json({
-        code: '1000',
-        message: 'OK'
-      });
-    }
-    else {
-      res.json({
-        code: '9999',
-        message: 'exeption error: token is not verified'
-      });
-    }
-  } catch (error) {
-    res.json({
-      code: '9999',
-      message: 'exeption error: ' + error
-    });
-  }
-});
-
-router.get('/getuser', async (req, res) => {
-  if(req.headers.phone == null) {
-    return res.json({
-      code: '9999',
-      message: 'missing phone query'
-    });
-  }
-
-  const userExist = await User.findOne({
-    attributes: ['phone', 'name', 'avtlink', 'id'],
-    where: {
-      phone: req.headers.phone
-    }
-  });
-
-  if(userExist) {
-    res.json({
-      code: '9996',
-      message: 'user is existed',
-      data: userExist,
-    });
-  } else {
-    res.json({
-      code: '1000',
-      message: 'can sign up',
-      data: {},
-    });
-  }
-});
+router.use('/add_post', addPostApi);
+router.use('/getuser', getUserApi);
+router.use('/login', loginApi);
+router.use('/signup', signupApi);
+router.use('/logout', logoutApi);
+router.use('/get_post', getpostApi);
+router.use('/get_list_post', getListPost);
+router.use('/edit_post', editPostApi);
+router.use('/delete_post', deletePostApi);
+router.use('/report_post', reportPostApi);
+router.use('/set_comment', setCommentApi);
+router.use('/get_comment', getCommentApi);
+router.use('/edit_comment', editCommentApi);
+router.use('/del_comment', deleteCommentApi);
+router.use('/get_list_conversation', getListChatApi);
+router.use('/get_conversation', getConversationApi);
+router.use('/get_list_friends', getListFriendsApi);
+router.use('/get_request_friend', getRequestFriendsApi);
+router.use('/set_request_friend', setRequestFriendApi);
+router.use('/set_accept_friend', setAcceptFriendApi);
+router.use('/send', sendApi);
+router.use('/like', likeApi);
+router.use('/get_profile', getProfile);
 
 module.exports = router;
